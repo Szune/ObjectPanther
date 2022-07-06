@@ -54,6 +54,11 @@ Selecting a property, `/` :
 "./Value" # select current then Value
 ```
 
+Selecting multiple properties, `{arg0,arg1,...}` :
+```powershell
+"Value{Name,Water}" # select "Name" and "Water" property from the "Value" object property
+```
+
 Indexing into an array, `[int]` :
 ```powershell
 "Value[0]" # first item

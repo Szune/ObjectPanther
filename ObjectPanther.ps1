@@ -52,6 +52,7 @@ function Get-ObjectPath {
             '[' { $this.pos++; $this.RecurseIndex() }
             '|' { $this.pos++; $this.RecurseFilter() }
             '/' { $this.pos++; $this.ExpandTarget() }
+            '{' { $this.pos++; $this.SelectTarget() }
             default { throw "Unhandled char '$($this.path[$this.pos])' in RecurseExpr" }
           }
         }
@@ -80,6 +81,45 @@ function Get-ObjectPath {
         }
 
         return $text
+      }
+
+      hidden [array]GetSelectArgs() {
+        $text = ""
+        $filled = $false
+        $allArgs = @()
+        $curArg = [System.Text.StringBuilder]::new()
+        while($this.pos -lt $this.path.Length) {
+          switch ($this.path[$this.pos]) {
+            ',' {
+              if($curArg.Length -gt 0) {
+                $allArgs += $curArg.ToString()
+                $curArg = $curArg.Clear()
+              }
+              break
+            }
+            '}' {
+              if($curArg.Length -gt 0) {
+                $allArgs += $curArg.ToString()
+                $curArg = $curArg.Clear()
+              }
+              $filled = $true
+              break
+            }
+            ' ' {
+              break
+            }
+            default {
+              $curArg = $curArg.Append($this.path[$this.pos])
+              break
+            }
+          }
+          $this.pos++
+          if($filled) {
+            break
+          }
+        }
+
+        return $allArgs
       }
 
       hidden [array] GetFilterParts() {
@@ -323,6 +363,12 @@ function Get-ObjectPath {
         }
       }
 
+      hidden [void]SelectTarget() {
+        $this.ExpandTarget()
+        $selecting = $this.GetSelectArgs()
+        $this.curObj = $this.curObj | Select-Object $selecting
+      }
+
       hidden [void]ExpandTarget() {
         $str = $this.target.ToString()
         $this.target.Clear()
@@ -346,7 +392,7 @@ function Get-ObjectPath {
       hidden [void]RecurseTarget() {
         while($this.pos -lt $this.path.Length) {
           switch ($this.path[$this.pos]) {
-            { $_ -in @('[', '/', ']', '|') } {
+            { $_ -in @('[', '/', ']', '|', '{', '}') } {
               return
             }
             default {
