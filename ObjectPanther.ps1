@@ -21,13 +21,13 @@ function Get-ObjectPath {
     }
 
     class ObjectPanther {
-      hidden [Hashtable]$hashObj
+      hidden $hashObj
       hidden [string]$path
       hidden [int]$pos
       hidden $curObj
       hidden [System.Text.StringBuilder]$target # property, self '.', .[]
 
-      ObjectPanther([string]$objPath, [Hashtable]$hashObject) {
+      ObjectPanther([string]$objPath, $hashObject) {
           $this.pos = 0
           $this.path = $objPath
           $this.hashObj = $hashObject
